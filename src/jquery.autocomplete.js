@@ -16,6 +16,9 @@
                 escapeRegExChars: function (value) {
                     return value.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
                 },
+                clearText: function (value) {
+                    return value.replace(/[^a-zа-яёa-z\s0-9]+/gmui, " ").replace(/[\s]+/gmui, " ");
+                },
                 createNode: function (containerClass) {
                     var div = document.createElement('div');
                     div.className = containerClass;
@@ -70,6 +73,7 @@
 
     $.Autocomplete = Autocomplete;
 
+    // Значения по умолчанию
     Autocomplete.defaults = {
         autoSelectFirst: false,
         showLogo: true,
@@ -100,6 +104,7 @@
         transformResult: _transformResult,
         showNoSuggestionNotice: true,
         noSuggestionNotice: 'Нет результатов',
+        suggestionPrefix: 'Выберите адрес или продолжите ввод',
         orientation: 'bottom',
         forceFixPosition: false
     };
@@ -113,10 +118,10 @@
             return suggestion.address_value;
         }
 
-        var pattern = '(' + utils.escapeRegExChars(currentValue) + ')';
+        var stringArr = utils.clearText(currentValue).split(" ");
 
         return suggestion.address_value
-            .replace(new RegExp(pattern, 'gi'), '<strong>$1<\/strong>')
+            .replace(new RegExp('(' + stringArr.join('|') + ')', 'gi'), '<strong>$1<\/strong>')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -147,6 +152,7 @@
 
             container = $(that.suggestionsContainer);
             container.append('<div class="dl-items"></div>');
+
             if (options.showLogo) {
                 container.append('<div class="dl-logo"><a href="https://datalitics.ru"><img alt="Даталитикс" src="https://api.datalitics.ru/assets/logo_color_100.png"></a></div>');
             }
@@ -489,7 +495,7 @@
                 that = this,
                 options = that.options,
                 serviceUrl = 'https://api.datalitics.ru/v1/address/' + options.addressType + '/suggest',
-                params={},
+                params = {},
                 cacheKey;
 
             params['q'] = q;
@@ -602,7 +608,7 @@
                     html += formatGroup(suggestion, value, i);
                 }
 
-                html += '<div class="' + className + '" title="'+suggestion.address_value+'" data-index="' + i + '">' + formatResult(suggestion, value, i) + '</div>';
+                html += '<div class="' + className + '" title="' + suggestion.address_value + '" data-index="' + i + '">' + formatResult(suggestion, value, i) + '</div>';
             });
 
             this.adjustContainerWidth();
@@ -616,7 +622,7 @@
             that.fixPosition();
 
             if (container.find('.dl-prefix').length === 0) {
-                container.prepend('<div class="dl-prefix">Выберите вариант или продолжите ввод</div>');
+                container.prepend('<div class="dl-prefix">' + options.suggestionPrefix + '</div>');
             }
 
             container.show();
