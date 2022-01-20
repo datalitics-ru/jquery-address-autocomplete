@@ -78,25 +78,15 @@
     opacity: 0.5;
 }
 
-//@keyframes download {
-//    0% {
-//        transform: rotate(180deg);
-//    }
-//
-//    100% {
-//        transform: rotate(180deg);
-//    }
-//}
-//
-//@keyframes download {
-//    0% {
-//        transform: rotate(0deg);
-//    }
-//
-//    100% {
-//        transform: rotate(360deg);
-//    }
-//}
+@keyframes download {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
 
 .download-icon {
     display: none;
@@ -105,7 +95,11 @@
     left: 45%;
     bottom: 0;
     right: 0;
-    //animation: download 1.5s infinite linear;
+
+}
+
+.download-icon svg{
+    animation: download 1.5s infinite linear;
 }
 
 .download-icon.active {
