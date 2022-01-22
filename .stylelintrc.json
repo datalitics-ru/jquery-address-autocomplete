@@ -18,6 +18,6 @@
     "at-rule-name-space-after": "always",
     "at-rule-semicolon-newline-after": "always",
     "at-rule-semicolon-space-before": "never",
-    "selector-max-class": 2
+    "selector-max-class": 5
   }
 }
