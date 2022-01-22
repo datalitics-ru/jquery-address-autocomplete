@@ -6,6 +6,8 @@ const cleanCSS = require('gulp-clean-css')
 const server = require('browser-sync').create()
 const eslint = require('gulp-eslint')
 const webpack = require('webpack-stream')
+const CircularDependencyPlugin = require('circular-dependency-plugin')
+const DuplicatePackageCheckerPlugin = require("duplicate-package-checker-webpack-plugin")
 
 function setMode(isProduction = false) {
     return cb => {
@@ -44,7 +46,10 @@ function script() {
         .pipe(webpack({
             mode: process.env.NODE_ENV,
             output: {
-                filename: '[name].min.js',
+                filename: 'jquery-autocomplete.min.js',
+            },
+            externals: {
+                "jquery": "jQuery"
             },
             module: {
                 rules: [
@@ -59,7 +64,11 @@ function script() {
                         }
                     }
                 ]
-            }
+            },
+            plugins: [
+                new CircularDependencyPlugin(),
+                new DuplicatePackageCheckerPlugin()
+            ]
         }))
         .pipe(gulp.dest('build'))
 }
@@ -84,8 +93,8 @@ function serve(cb) {
     return cb()
 }
 
-const dev = gulp.parallel(styles,script)
+const dev = gulp.parallel(styles, script)
 const build = gulp.series(dev)
 
-module.exports.serve = gulp.series(setMode(), build,serve)
+module.exports.serve = gulp.series(setMode(), build, serve)
 module.exports.build = gulp.series(setMode(true), build)
