@@ -10,8 +10,7 @@
 }(function ($) {
     'use strict'
 
-    var
-        utils = (function () {
+    var utils = (function () {
             return {
                 escapeRegExChars: function (value) {
                     return value.replace(/[|\\{}()[\]^$+*?.]/g, `\\$&`)
@@ -121,7 +120,7 @@
         var stringArr = utils.clearText(currentValue).split(` `)
 
         return suggestion.address_value
-            .replace(new RegExp(`(` + stringArr.join(`|`) + `)`, `gi`), `<strong>$1<\/strong>`)
+            .replace(new RegExp(`(` + stringArr.join(`|`) + `)`, `gi`), `<strong>$1</strong>`)
             .replace(/&/g, `&amp;`)
             .replace(/</g, `&lt;`)
             .replace(/>/g, `&gt;`)

@@ -1,5 +1,6 @@
 const gulp = require('gulp')
 const sass = require('gulp-sass')(require('sass'));
+const plumber = require('gulp-plumber')
 const styleLint = require('gulp-stylelint')
 const rename = require("gulp-rename")
 const cleanCSS = require('gulp-clean-css')
@@ -18,6 +19,7 @@ function setMode(isProduction = false) {
 
 function styles() {
     return gulp.src('src/*.scss')
+        .pipe(plumber())
         .pipe(styleLint({
             fix: true,
             failAfterError: false,
@@ -41,7 +43,8 @@ function styles() {
 
 function script() {
     return gulp.src('src/jquery-autocomplete.js')
-        .pipe(eslint())
+        .pipe(plumber())
+        .pipe(eslint({fix:true}))
         .pipe(eslint.format())
         .pipe(webpack({
             mode: process.env.NODE_ENV,
