@@ -22,7 +22,7 @@
     border: 1px solid #acb1bf;
     border-radius: 8px;
     padding: 13px 0 13px 40px;
-    background-color: #ffffff;
+    background-color: #fff;
     font-size: 18px;
     font-weight: 400;
     color: #262626;
@@ -55,7 +55,7 @@
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     overflow: hidden;
-    background-color: #ffffff;
+    background-color: #fff;
     z-index: 10;
     align-items: center;
     justify-content: center;
@@ -69,7 +69,7 @@
     /* display: none; */
     position: relative;
     padding: 16px;
-    background-color: #ffffff;
+    background-color: #fff;
     list-style: none;
     margin: 0 0 30px;
 }
@@ -95,10 +95,9 @@
     left: 45%;
     bottom: 0;
     right: 0;
-
 }
 
-.download-icon svg{
+.download-icon svg {
     animation: download 1.5s infinite linear;
 }
 
@@ -126,7 +125,6 @@
     font-style: normal;
 }
 
-
 .form-logo-wrap {
     position: absolute;
     width: 98px;
@@ -149,4 +147,3 @@
     font-weight: 400;
     color: #6c7180;
 }
-
