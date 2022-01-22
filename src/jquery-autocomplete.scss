@@ -3,9 +3,9 @@
     src:
         local("Lato Regular"),
         local("Lato-Regular"),
-        url("https://datalitics.ru/jquery-autocomplete/Lato-Regular.woff2") format("woff2"),
-        url("https://datalitics.ru/jquery-autocomplete/Lato-Regular.woff") format("woff"),
-        url("https://datalitics.ru/jquery-autocomplete/Lato-Regular.ttf") format("truetype");
+        url("https://cdn.datalitics.ru/jquery-autocomplete/Lato-Regular.woff2") format("woff2"),
+        url("https://cdn.datalitics.ru/jquery-autocomplete/Lato-Regular.woff") format("woff"),
+        url("https://cdn.datalitics.ru/jquery-autocomplete/Lato-Regular.ttf") format("truetype");
     font-weight: 400;
     font-style: normal;
 }
@@ -74,7 +74,7 @@
         border-bottom-right-radius: 8px;
         overflow: hidden;
         background-color: #fff;
-        z-index: 10;
+        z-index: 10000000;
         align-items: center;
         justify-content: center;
 
