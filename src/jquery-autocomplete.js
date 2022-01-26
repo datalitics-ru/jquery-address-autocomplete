@@ -11,22 +11,22 @@
     'use strict'
 
     var utils = (function () {
-            return {
-                escapeRegExChars: function (value) {
-                    return value.replace(/[|\\{}()[\]^$+*?.]/g, `\\$&`)
-                },
-                clearText: function (value) {
-                    return value.replace(/[^a-zа-яёa-z\s0-9]+/gmui, ` `).replace(/[\s]+/gmui, ` `)
-                },
-                createNode: function (containerClass) {
-                    var div = document.createElement(`div`)
-                    div.className = containerClass
-                    div.style.position = `absolute`
-                    div.style.display = `none`
-                    return div
-                }
+        return {
+            escapeRegExChars: function (value) {
+                return value.replace(/[|\\{}()[\]^$+*?.]/g, `\\$&`)
+            },
+            clearText: function (value) {
+                return value.replace(/[^a-zа-яёa-z\s0-9]+/gmui, ` `).replace(/[\s]+/gmui, ` `)
+            },
+            createNode: function (containerClass) {
+                var div = document.createElement(`div`)
+                div.className = containerClass
+                div.style.position = `absolute`
+                div.style.display = `none`
+                return div
             }
-        }())
+        }
+    }())
 
     var keys = {
         ESC: 27,
@@ -40,7 +40,7 @@
 
     var noop = $.noop
 
-    function Autocomplete (el, options) {
+    function Autocomplete(el, options) {
         var that = this
 
         that.element = el
@@ -94,8 +94,10 @@
         onSearchComplete: noop,
         onSearchError: noop,
         preserveInput: false,
-        containerClass: `autocomplete-suggestions`,
-        inputClass: `autocomplete-input`,
+        containerClass: `dlt-autocomplete-suggestions`,
+        itemsClass: `dlt-autocomplete-items`,
+        logoClass: `dlt-logo`,
+        inputClass: `dlt-autocomplete-input`,
         tabDisabled: false,
         currentRequest: null,
         triggerSelectOnValidInput: true,
@@ -103,16 +105,15 @@
         transformResult: _transformResult,
         showNoSuggestionNotice: true,
         noSuggestionNotice: `Нет результатов`,
-        suggestionPrefix: `Выберите адрес или продолжите ввод`,
         orientation: `bottom`,
         forceFixPosition: false
     }
 
-    function _transformResult (response) {
+    function _transformResult(response) {
         return typeof response === `string` ? $.parseJSON(response) : response
     };
 
-    function _formatResult (suggestion, currentValue) {
+    function _formatResult(suggestion, currentValue) {
         if (!currentValue) {
             return suggestion.address_value
         }
@@ -128,7 +129,7 @@
             .replace(/&lt;(\/?strong)&gt;/g, `<$1>`)
     };
 
-    function _formatGroup (suggestion, category) {
+    function _formatGroup(suggestion, category) {
         return `<div class="autocomplete-group">` + category + `</div>`
     };
 
@@ -150,10 +151,17 @@
             that.suggestionsContainer = Autocomplete.utils.createNode(options.containerClass)
 
             container = $(that.suggestionsContainer)
-            container.append(`<div class="dl-items"></div>`)
+
+            var items = document.createElement(`div`);
+            items.classList.add(options.itemsClass);
+
+            container.append(items)
 
             if (options.showLogo) {
-                container.append(`<div class="dl-logo"><a href="https://datalitics.ru"><img alt="Даталитикс" src="https://api.datalitics.ru/assets/logo_color_100.png"></a></div>`)
+                var logo = document.createElement(`div`);
+                logo.classList.add(options.logoClass);
+                logo.innerHTML='<a href="https://datalitics.ru"><img alt="Даталитикс" src="https://api.datalitics.ru/assets/logo_color_100.png"></a>';
+                container.append(logo);
             }
 
             container.appendTo(options.appendTo || `body`)
@@ -293,7 +301,7 @@
             var containerHeight = $container.outerHeight()
             var height = that.el.outerHeight()
             var offset = that.el.offset()
-            var styles = { top: offset.top, left: offset.left }
+            var styles = {top: offset.top, left: offset.left}
 
             if (orientation === `auto`) {
                 var viewPortHeight = $(window).height()
@@ -365,45 +373,45 @@
             }
 
             switch (e.which) {
-            case keys.ESC:
-                that.el.val(that.currentValue)
-                that.hide()
-                break
-            case keys.RIGHT:
-                if (that.hint && that.options.onHint && that.isCursorAtEnd()) {
-                    that.selectHint()
+                case keys.ESC:
+                    that.el.val(that.currentValue)
+                    that.hide()
                     break
-                }
-                return
-            case keys.TAB:
-                if (that.hint && that.options.onHint) {
-                    that.selectHint()
+                case keys.RIGHT:
+                    if (that.hint && that.options.onHint && that.isCursorAtEnd()) {
+                        that.selectHint()
+                        break
+                    }
                     return
-                }
-                if (that.selectedIndex === -1) {
-                    that.hide()
+                case keys.TAB:
+                    if (that.hint && that.options.onHint) {
+                        that.selectHint()
+                        return
+                    }
+                    if (that.selectedIndex === -1) {
+                        that.hide()
+                        return
+                    }
+                    that.select(that.selectedIndex)
+                    if (that.options.tabDisabled === false) {
+                        return
+                    }
+                    break
+                case keys.RETURN:
+                    if (that.selectedIndex === -1) {
+                        that.hide()
+                        return
+                    }
+                    that.select(that.selectedIndex)
+                    break
+                case keys.UP:
+                    that.moveUp()
+                    break
+                case keys.DOWN:
+                    that.moveDown()
+                    break
+                default:
                     return
-                }
-                that.select(that.selectedIndex)
-                if (that.options.tabDisabled === false) {
-                    return
-                }
-                break
-            case keys.RETURN:
-                if (that.selectedIndex === -1) {
-                    that.hide()
-                    return
-                }
-                that.select(that.selectedIndex)
-                break
-            case keys.UP:
-                that.moveUp()
-                break
-            case keys.DOWN:
-                that.moveDown()
-                break
-            default:
-                return
             }
 
             e.stopImmediatePropagation()
@@ -418,9 +426,9 @@
             }
 
             switch (e.which) {
-            case keys.UP:
-            case keys.DOWN:
-                return
+                case keys.UP:
+                case keys.DOWN:
+                    return
             }
 
             clearTimeout(that.onChangeTimeout)
@@ -604,22 +612,18 @@
                     html += formatGroup(suggestion, value, i)
                 }
 
-                html += `<div class="` + className + `" title="` + suggestion.address_value + `" data-index="` + i + `">` + formatResult(suggestion, value, i) + `</div>`
+                html += `<div class="` + className + `" title="` + suggestion.address_value + `" data-index="` + i + `"><address>` + formatResult(suggestion, value, i) + `</address></div>`
             })
 
             this.adjustContainerWidth()
 
             noSuggestionsContainer.detach()
-            container.find(`.dl-items`).html(html)
+            container.find(`.`+options.itemsClass).html(html)
 
             if ($.isFunction(beforeRender)) {
                 beforeRender.call(that.element, container, that.suggestions)
             }
             that.fixPosition()
-
-            if (container.find(`.dl-prefix`).length === 0) {
-                container.prepend(`<div class="dl-prefix">` + options.suggestionPrefix + `</div>`)
-            }
 
             container.show()
 
@@ -711,7 +715,7 @@
         verifySuggestionsFormat: function (suggestions) {
             if (suggestions.length && typeof suggestions[0] === `string`) {
                 return $.map(suggestions, function (value) {
-                    return { value: value, data: null }
+                    return {value: value, data: null}
                 })
             }
 

@@ -18,7 +18,7 @@ function setMode(isProduction = false) {
 }
 
 function styles() {
-    return gulp.src('src/*.scss')
+    return gulp.src('src/jquery-autocomplete.scss')
         .pipe(plumber())
         .pipe(styleLint({
             fix: true,
