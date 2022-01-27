@@ -53,6 +53,7 @@
         that.cachedResponse = {}
         that.onChangeTimeout = null
         that.onChange = null
+        that.processContainer = null
         that.suggestionsContainer = null
         that.noSuggestionsContainer = null
         that.options = $.extend(true, {}, Autocomplete.defaults, options)
@@ -104,7 +105,7 @@
         preventBadQueries: true,
         transformResult: _transformResult,
         showNoSuggestionNotice: true,
-        noSuggestionNotice: `Нет результатов`,
+        noSuggestionNotice: `<p>Неизвестный&nbsp;адрес.<br>Попробуйте&nbsp;другой.</p>`,
         orientation: `bottom`,
         forceFixPosition: false
     }
@@ -145,7 +146,7 @@
             that.element.setAttribute(`autocomplete`, `off`)
             that.element.classList.add(options.inputClass)
 
-            that.noSuggestionsContainer = $(`<div class="autocomplete-no-suggestion"></div>`)
+            that.noSuggestionsContainer = $(`<div class="dlt-no-suggestion"></div>`)
                 .html(this.options.noSuggestionNotice).get(0)
 
             that.suggestionsContainer = Autocomplete.utils.createNode(options.containerClass)
@@ -154,8 +155,13 @@
 
             var items = document.createElement(`div`);
             items.classList.add(options.itemsClass);
-
             container.append(items)
+
+            var process = document.createElement(`div`);
+            process.classList.add('dlt-process-icon');
+            process.innerHTML='<div></div>'
+            container.append(process)
+            that.processContainer=$(process);
 
             if (options.showLogo) {
                 var logo = document.createElement(`div`);
@@ -235,7 +241,7 @@
             var query = that.getQuery(value)
 
             that.blurTimeoutId = setTimeout(function () {
-                that.hide()
+                that.containerHide()
 
                 if (that.selection && that.currentValue !== query) {
                     (options.onInvalidateSelection || $.noop).call(that.element)
@@ -301,7 +307,7 @@
             var containerHeight = $container.outerHeight()
             var height = that.el.outerHeight()
             var offset = that.el.offset()
-            var styles = {top: offset.top, left: offset.left}
+            var styles = {top: offset.top-1, left: offset.left}
 
             if (orientation === `auto`) {
                 var viewPortHeight = $(window).height()
@@ -375,7 +381,7 @@
             switch (e.which) {
                 case keys.ESC:
                     that.el.val(that.currentValue)
-                    that.hide()
+                    that.containerHide()
                     break
                 case keys.RIGHT:
                     if (that.hint && that.options.onHint && that.isCursorAtEnd()) {
@@ -389,7 +395,7 @@
                         return
                     }
                     if (that.selectedIndex === -1) {
-                        that.hide()
+                        that.containerHide()
                         return
                     }
                     that.select(that.selectedIndex)
@@ -399,7 +405,7 @@
                     break
                 case keys.RETURN:
                     if (that.selectedIndex === -1) {
-                        that.hide()
+                        that.containerHide()
                         return
                     }
                     that.select(that.selectedIndex)
@@ -471,7 +477,7 @@
             }
 
             if (query.length < options.minChars) {
-                that.hide()
+                that.containerHide()
             } else {
                 that.getSuggestions(query)
             }
@@ -495,6 +501,7 @@
         },
 
         getSuggestions: function (q) {
+            var container = $(this.suggestionsContainer)
             var response
             var that = this
             var options = that.options
@@ -517,6 +524,7 @@
                 options.onSearchComplete.call(that.element, q, that.suggestions)
             } else if (!that.isBadQuery(q)) {
                 that.abortAjax()
+                container.addClass('process')
                 that.currentRequest = $.ajax({
                     url: serviceUrl,
                     data: params,
@@ -528,8 +536,10 @@
                     result = options.transformResult(data, q)
                     that.processResponse(result, q, cacheKey)
                     options.onSearchComplete.call(that.element, q, result.suggestions)
+                    container.removeClass('process')
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     options.onSearchError.call(that.element, q, jqXHR, textStatus, errorThrown)
+                    container.removeClass('process')
                 })
             } else {
                 this.noSuggestions()
@@ -554,7 +564,15 @@
             return false
         },
 
-        hide: function () {
+        containerShow: function (){
+            var container = $(this.suggestionsContainer)
+            container.show()
+            container.addClass('active')
+            this.el.addClass('active')
+            this.visible = true
+        },
+
+        containerHide: function (){
             var that = this
             var container = $(that.suggestionsContainer)
 
@@ -565,8 +583,10 @@
             that.visible = false
             that.selectedIndex = -1
             clearTimeout(that.onChangeTimeout)
-            $(that.suggestionsContainer).hide()
+            container.hide()
             that.onHint(null)
+            container.removeClass('active')
+            this.el.removeClass('active')
         },
 
         suggest: function () {
@@ -574,7 +594,7 @@
                 if (this.options.showNoSuggestionNotice) {
                     this.noSuggestions()
                 } else {
-                    this.hide()
+                    this.containerHide()
                 }
                 return
             }
@@ -625,7 +645,7 @@
             }
             that.fixPosition()
 
-            container.show()
+            that.containerShow()
 
             if (options.autoSelectFirst) {
                 that.selectedIndex = 0
@@ -633,7 +653,7 @@
                 container.children(`.` + className).first().addClass(classSelected)
             }
 
-            that.visible = true
+
             that.findBestHint()
         },
 
@@ -647,8 +667,7 @@
             this.adjustContainerWidth()
 
             noSuggestionsContainer.detach()
-            container.find(`.dl-items`).empty()
-            container.find(`.dl-prefix`).remove()
+            container.find(`.`+options.itemsClass).empty()
             container.prepend(noSuggestionsContainer)
 
             if ($.isFunction(beforeRender)) {
@@ -656,9 +675,7 @@
             }
 
             that.fixPosition()
-
-            container.show()
-            that.visible = true
+            this.containerShow()
         },
 
         adjustContainerWidth: function () {
@@ -785,7 +802,7 @@
 
         select: function (i) {
             var that = this
-            that.hide()
+            that.containerHide()
             that.onSelect(i)
         },
 
