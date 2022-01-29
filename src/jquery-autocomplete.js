@@ -56,6 +56,7 @@
         that.processContainer = null
         that.suggestionsContainer = null
         that.noSuggestionsContainer = null
+        that.wrapperContainer = null
         that.options = $.extend(true, {}, Autocomplete.defaults, options)
         that.classes = {
             selected: `autocomplete-selected`,
@@ -96,6 +97,7 @@
         onSearchError: noop,
         preserveInput: false,
         containerClass: `dlt-autocomplete-suggestions`,
+        wrapperClass: `dlt-widget`,
         itemsClass: `dlt-autocomplete-items`,
         logoClass: `dlt-logo`,
         inputClass: `dlt-autocomplete-input`,
@@ -144,7 +146,22 @@
             var container
 
             that.element.setAttribute(`autocomplete`, `off`)
-            that.element.classList.add(options.inputClass)
+            that.element.classList.add(options.inputClass);
+            var wrapper = document.createElement(`div`);
+            wrapper.classList.add(options.wrapperClass);
+            $(that.element).wrap($(wrapper))
+
+            var button = document.createElement(`button`);
+            var delIcon = document.createElement(`div`);
+            var processIcon = document.createElement(`div`);
+            button.setAttribute(`title`, `Очистить`)
+
+            delIcon.classList.add('dlt-del');
+            processIcon.classList.add('dlt-process-icon');
+            button.append(delIcon)
+            button.append(processIcon)
+            that.wrapperContainer = that.element.parentNode;
+            that.wrapperContainer.append(button)
 
             that.noSuggestionsContainer = $(`<div class="dlt-no-suggestion"></div>`)
                 .html(this.options.noSuggestionNotice).get(0)
@@ -159,14 +176,14 @@
 
             var process = document.createElement(`div`);
             process.classList.add('dlt-process-icon');
-            process.innerHTML='<div></div>'
+            process.innerHTML = '<div></div>'
             container.append(process)
-            that.processContainer=$(process);
+            that.processContainer = $(process);
 
             if (options.showLogo) {
                 var logo = document.createElement(`div`);
                 logo.classList.add(options.logoClass);
-                logo.innerHTML='<a href="https://datalitics.ru"><img alt="Даталитикс" src="https://api.datalitics.ru/assets/logo_color_100.png"></a>';
+                logo.innerHTML = '<a href="https://datalitics.ru"><img alt="Даталитикс" src="https://api.datalitics.ru/assets/logo_color_100.png"></a>';
                 container.append(logo);
             }
 
@@ -201,23 +218,35 @@
 
             $(window).on(`resize.autocomplete`, that.fixPositionCapture)
 
+            that.checkFilledState();
+
             that.el.on(`keydown.autocomplete`, function (e) {
+                that.checkFilledState();
                 that.onKeyPress(e)
             })
             that.el.on(`keyup.autocomplete`, function (e) {
+                that.checkFilledState();
                 that.onKeyUp(e)
             })
             that.el.on(`blur.autocomplete`, function () {
+                that.checkFilledState();
                 that.onBlur()
             })
             that.el.on(`focus.autocomplete`, function () {
+                that.checkFilledState();
                 that.onFocus()
             })
             that.el.on(`change.autocomplete`, function (e) {
+                that.checkFilledState();
                 that.onKeyUp(e)
             })
             that.el.on(`input.autocomplete`, function (e) {
+                that.checkFilledState();
                 that.onKeyUp(e)
+            })
+            $(button).on(`click`, function () {
+                that.element.value=''
+                that.checkFilledState();
             })
         },
 
@@ -307,7 +336,7 @@
             var containerHeight = $container.outerHeight()
             var height = that.el.outerHeight()
             var offset = that.el.offset()
-            var styles = {top: offset.top-1, left: offset.left}
+            var styles = {top: offset.top - 1, left: offset.left}
 
             if (orientation === `auto`) {
                 var viewPortHeight = $(window).height()
@@ -500,8 +529,35 @@
             return $.trim(parts[parts.length - 1])
         },
 
-        getSuggestions: function (q) {
+        setProcessState: function () {
             var container = $(this.suggestionsContainer)
+            var wrapper = $(this.wrapperContainer)
+            wrapper.removeClass('filled')
+            container.addClass('process')
+            wrapper.addClass('process')
+        },
+
+        unsetProcessState: function () {
+            var container = $(this.suggestionsContainer)
+            var wrapper = $(this.wrapperContainer)
+            container.removeClass('process')
+            wrapper.removeClass('process')
+        },
+
+        checkFilledState: function () {
+            var wrapper = $(this.wrapperContainer)
+            var value = this.element.value
+
+            if (!$(wrapper).hasClass('process')) {
+                if (value !== '' && value !== undefined) {
+                    wrapper.addClass('filled')
+                } else {
+                    wrapper.removeClass('filled')
+                }
+            }
+        },
+
+        getSuggestions: function (q) {
             var response
             var that = this
             var options = that.options
@@ -524,7 +580,7 @@
                 options.onSearchComplete.call(that.element, q, that.suggestions)
             } else if (!that.isBadQuery(q)) {
                 that.abortAjax()
-                container.addClass('process')
+                that.setProcessState()
                 that.currentRequest = $.ajax({
                     url: serviceUrl,
                     data: params,
@@ -536,10 +592,10 @@
                     result = options.transformResult(data, q)
                     that.processResponse(result, q, cacheKey)
                     options.onSearchComplete.call(that.element, q, result.suggestions)
-                    container.removeClass('process')
+                    that.unsetProcessState()
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     options.onSearchError.call(that.element, q, jqXHR, textStatus, errorThrown)
-                    container.removeClass('process')
+                    that.unsetProcessState()
                 })
             } else {
                 this.noSuggestions()
@@ -564,7 +620,7 @@
             return false
         },
 
-        containerShow: function (){
+        containerShow: function () {
             var container = $(this.suggestionsContainer)
             container.show()
             container.addClass('active')
@@ -572,7 +628,7 @@
             this.visible = true
         },
 
-        containerHide: function (){
+        containerHide: function () {
             var that = this
             var container = $(that.suggestionsContainer)
 
@@ -638,7 +694,7 @@
             this.adjustContainerWidth()
 
             noSuggestionsContainer.detach()
-            container.find(`.`+options.itemsClass).html(html)
+            container.find(`.` + options.itemsClass).html(html)
 
             if ($.isFunction(beforeRender)) {
                 beforeRender.call(that.element, container, that.suggestions)
@@ -667,7 +723,7 @@
             this.adjustContainerWidth()
 
             noSuggestionsContainer.detach()
-            container.find(`.`+options.itemsClass).empty()
+            container.find(`.` + options.itemsClass).empty()
             container.prepend(noSuggestionsContainer)
 
             if ($.isFunction(beforeRender)) {
